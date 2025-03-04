@@ -5,6 +5,7 @@ using API.DOTs;
 using API.DTOs;
 using API.Entities;
 using API.Interfaces;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,39 +14,48 @@ namespace API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 
-public class AccountController(DataContext context, ITokenService tokenService) : ControllerBase
+public class AccountController(
+    DataContext context,
+    ITokenService tokenService,
+    IMapper mapper
+) : ControllerBase
 {
     [HttpPost("register")] // account/register
     public async Task<ActionResult<UserDto>> Register([FromBody] RegisterDto registerDto)
     {
 
-        return Ok();
-        // 
-        /*
-                if (await UserExists(registerDto.Username))
-                {
-                    return BadRequest("Username already exist.");
-                }
 
-                using var hmac = new HMACSHA512();
+        if (await UserExists(registerDto.Username))
+        {
+            return BadRequest("Username already exist.");
+        }
 
-                var user = new AppUser
-                {
-                    UserName = registerDto.Username.ToLower(),
-                    PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
-                    PasswordSalt = hmac.Key
-                };
+        using var hmac = new HMACSHA512();
 
-                // Persist on database
-                context.Users.Add(user);
-                await context.SaveChangesAsync();
+        // var user = new AppUser
+        // {
+        //     UserName = registerDto.Username.ToLower(),
+        //     PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
+        //     PasswordSalt = hmac.Key
+        // };
 
-                return new UserDto
-                {
-                    Username = user.UserName,
-                    Token = tokenService.CreateToken(user)
-                };
-                */
+        var user = mapper.Map<AppUser>(registerDto);
+
+        user.UserName = registerDto.Username.ToLower();
+        user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
+        user.PasswordSalt = hmac.Key;
+
+        // Persist on database
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        return new UserDto
+        {
+            Username = user.UserName,
+            Token = tokenService.CreateToken(user),
+            KnownAs = user.KnownAs
+        };
+
     }
 
     [HttpPost("login")] // account/login
@@ -69,6 +79,7 @@ public class AccountController(DataContext context, ITokenService tokenService) 
         return Ok(new UserDto
         {
             Username = user.UserName,
+            KnownAs = user.KnownAs,
             Token = tokenService.CreateToken(user),
             PhotoUrl = user.Photos.FirstOrDefault(p => p.IsMain)?.Url
         });

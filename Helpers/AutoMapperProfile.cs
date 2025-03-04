@@ -1,3 +1,4 @@
+using API.DOTs;
 using API.DTOs;
 using API.Entities;
 using API.Extensions;
@@ -13,5 +14,7 @@ public class AutoMapperProfile : Profile
             .ForMember(m => m.PhotoUrl, o => o.MapFrom(s => s.Photos.FirstOrDefault(u => u.IsMain)!.Url));
         CreateMap<Photo, PhotoDto>();
         CreateMap<MemberUpdateDto, AppUser>();
+        CreateMap<RegisterDto, AppUser>();
+        CreateMap<string, DateOnly>().ConvertUsing(s => DateOnly.Parse(s));
     }
 }
