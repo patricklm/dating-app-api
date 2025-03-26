@@ -11,14 +11,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-
 public class AccountController(
     DataContext context,
     ITokenService tokenService,
     IMapper mapper
-) : ControllerBase
+) : BaseApiController
 {
     [HttpPost("register")] // account/register
     public async Task<ActionResult<UserDto>> Register([FromBody] RegisterDto registerDto)
@@ -52,8 +49,9 @@ public class AccountController(
         return new UserDto
         {
             Username = user.UserName,
-            Token = tokenService.CreateToken(user),
-            KnownAs = user.KnownAs
+            KnownAs = user.KnownAs,
+            Gender = user.Gender,
+            Token = tokenService.CreateToken(user)
         };
 
     }
@@ -80,8 +78,9 @@ public class AccountController(
         {
             Username = user.UserName,
             KnownAs = user.KnownAs,
-            Token = tokenService.CreateToken(user),
-            PhotoUrl = user.Photos.FirstOrDefault(p => p.IsMain)?.Url
+            Gender = user.Gender,
+            PhotoUrl = user.Photos.FirstOrDefault(p => p.IsMain)?.Url,
+            Token = tokenService.CreateToken(user)
         });
     }
     private async Task<bool> UserExists(string username)

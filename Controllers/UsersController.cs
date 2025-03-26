@@ -1,6 +1,7 @@
 using API.DTOs;
 using API.Entities;
 using API.Extensions;
+using API.Helpers;
 using API.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
@@ -9,16 +10,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [Authorize]
-[ApiController]
-[Route("api/[controller]")]
-
-public class UsersController(IUserRepository userRepo, IPhotoService photoService, IMapper mapper) : ControllerBase
+public class UsersController(IUserRepository userRepo, IPhotoService photoService, IMapper mapper) : BaseApiController
 {
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers()
+    public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery] UserParams userParams)
     {
-        var users = await userRepo.GetMembersAsync();
+        userParams.CurrentUsername = User.GetUsername();
+        var users = await userRepo.GetMembersAsync(userParams);
+        Response.AddPaginationHeader(users);
         return Ok(users);
     }
 

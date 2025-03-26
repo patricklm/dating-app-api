@@ -6,9 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class BuggyController(DataContext context) : ControllerBase
+
+    public class BuggyController(DataContext context) : BaseApiController
     {
 
         [Authorize]
